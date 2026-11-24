@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QuickChords — Lyrics in, chords over</title>
+<meta name="description" content="Paste your lyrics, get clean chord placements, mood progressions and instant transposition.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F2E8;   /* warm studio paper */
+  --ink:#1A1612;     /* deep ink */
+  --clay:#CF4A12;    /* terracotta: active chords, CTAs */
+  --butter:#F3B53F;  /* warm highlight */
+  --moss:#23382E;    /* calm night-studio green */
+  --ease:cubic-bezier(.22,1,.36,1);
+  --display:'Fraunces',Georgia,serif;
+  --body:'DM Sans',Georgia,serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:auto}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+em{font-style:italic;color:var(--clay)}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.02;letter-spacing:-.02em}
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(1.2rem,4vw,2.5rem)}
+section{position:relative;padding:clamp(4.5rem,10vw,8rem) 0}
+.eyebrow{font-size:.74rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--clay);display:inline-flex;align-items:center;gap:.7rem}
+.eyebrow::before{content:"";width:28px;height:2px;background:currentColor}
+h2{font-size:clamp(2.2rem,5vw,3.8rem);margin:.9rem 0 1.1rem}
+.lead{color:#5b5348;max-width:34em}
+
+/* buttons */
+.btn{position:relative;display:inline-flex;align-items:center;gap:.6rem;padding:.95rem 1.6rem;border-radius:99px;font:700 .95rem var(--body);border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;overflow:hidden;isolation:isolate;transition:transform .5s var(--ease),box-shadow .5s var(--ease),color .4s var(--ease),border-color .4s var(--ease)}
+.btn::before{content:"";position:absolute;inset:0;background:var(--ink);transform:translateY(101%);border-radius:inherit;z-index:-1;transition:transform .5s var(--ease)}
+.btn span.arr{display:inline-block;transition:transform .5s var(--ease)}
+.btn:hover{transform:translateY(-3px);color:var(--paper);box-shadow:0 12px 24px -10px rgba(26,22,18,.55)}
+.btn:hover::before{transform:translateY(0)}
+.btn:hover .arr{transform:translateX(5px)}
+.btn:active{transform:translateY(0) scale(.97)}
+.btn.solid{background:var(--clay);border-color:var(--clay);color:#fff}
+.btn.solid::before{background:var(--ink)}
+.btn.solid:hover{border-color:var(--ink)}
+.btn.light{border-color:var(--paper);color:var(--paper)}
+.btn.light::before{background:var(--paper)}
+.btn.light:hover{color:var(--ink)}
+.btn:focus-visible,.nav a:focus-visible,.burger:focus-visible{outline:3px solid var(--butter);outline-offset:3px}
+
+/* preloader */
+#pre{position:fixed;inset:0;z-index:100;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center}
+.pre-in{width:min(420px,80vw);text-align:center}
+.pre-word{font:600 clamp(2.4rem,9vw,4rem) var(--display);letter-spacing:-.02em;display:flex;justify-content:center;overflow:hidden;padding-bottom:.15em}
+.pre-word .a{color:var(--butter);font-style:italic;display:flex}
+.pre-word .a,.pre-word .q{display:flex}
+.ch{display:inline-block;will-change:transform}
+.pre-bar{height:2px;background:rgba(247,242,232,.18);margin:1.4rem 0 .8rem;overflow:hidden}
+.pre-bar i{display:block;height:100%;background:var(--clay);transform:scaleX(0);transform-origin:left}
+.pre-n{font:500 .8rem var(--body);letter-spacing:.2em;color:rgba(247,242,232,.6)}
+
+/* nav */
+.nav{position:fixed;top:0;left:0;right:0;z-index:50;padding:1.3rem 0;transition:padding .5s var(--ease),background .5s var(--ease),box-shadow .5s var(--ease),transform .5s var(--ease)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between}
+.nav.scrolled{padding:.65rem 0;background:rgba(247,242,232,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 1px 0 rgba(26,22,18,.1)}
+.logo{font:700 1.45rem var(--display);letter-spacing:-.02em;position:relative;z-index:70}
+.logo b{color:var(--clay);font-style:italic}
+.links{display:flex;gap:2rem;align-items:center}
+.links a.l{font-weight:500;font-size:.95rem;position:relative}
+.links a.l::after{content:"";position:absolute;left:0;bottom:-4px;height:2px;width:100%;background:var(--clay);transform:scaleX(0);transform-origin:right;transition:transform .5s var(--ease)}
+.links a.l:hover::after{transform:scaleX(1);transform-origin:left}
+.nav .btn{padding:.6rem 1.15rem;font-size:.85rem}
+.burger{display:none;position:relative;z-index:70;width:46px;height:46px;border-radius:50%;border:2px solid var(--ink);background:transparent;cursor:pointer;transition:transform .5s var(--ease),background .4s var(--ease)}
+.burger:hover{transform:scale(1.08)}
+.burger i{position:absolute;left:11px;right:11px;height:2px;background:var(--ink);transition:transform .5s var(--ease),top .5s var(--ease),background .4s}
+.burger i:nth-child(1){top:16px}.burger i:nth-child(2){top:25px}
+.menu-open .burger{background:var(--paper);border-color:var(--paper)}
+.menu-open .burger i{background:var(--ink)}
+.menu-open .burger i:nth-child(1){top:20px;transform:rotate(45deg)}
+.menu-open .burger i:nth-child(2){top:20px;transform:rotate(-45deg)}
+.menu-open .logo{color:var(--paper)}
+.mobile{position:fixed;inset:0;z-index:60;background:var(--moss);color:var(--paper);display:flex;flex-direction:column;justify-content:center;padding:6rem 2rem 3rem;visibility:hidden;clip-path:circle(0 at calc(100% - 3rem) 2.6rem)}
+.mobile a.m{font:600 clamp(2.4rem,11vw,3.6rem) var(--display);display:block;padding:.3rem 0;overflow:hidden}
+.mobile a.m span{display:block}
+.mobile .btn{margin-top:2rem;align-self:flex-start}
+.mobile small{margin-top:2rem;color:rgba(247,242,232,.55)}
+
+/* hero */
+.hero{min-height:100vh;display:flex;align-items:center;padding:8rem 0 5rem;overflow:hidden}
+.hero .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:3rem;align-items:center;position:relative;z-index:2}
+.hero h1{font-size:clamp(3rem,7.4vw,6rem);margin:1.2rem 0 1.5rem}
+.hero h1 .ln{display:block;overflow:hidden;padding-bottom:.08em}
+.hero h1 .ln>span{display:block}
+.hero .lead{font-size:1.15rem;margin-bottom:2rem}
+.cta-row{display:flex;gap:.9rem;flex-wrap:wrap}
+.orb{position:absolute;border-radius:50%;filter:blur(2px);z-index:1;will-change:transform}
+.o1{width:420px;height:420px;background:var(--butter);opacity:.35;top:-80px;right:-120px}
+.o2{width:260px;height:260px;background:var(--clay);opacity:.18;bottom:6%;left:-90px}
+.o3{width:90px;height:90px;border:2px solid var(--ink);opacity:.2;top:28%;left:46%;background:none}
+
+/* demo card */
+.card{background:#fff;border:2px solid var(--ink);border-radius:20px;padding:1.4rem;box-shadow:10px 10px 0 var(--ink);position:relative}
+.card-top{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.2rem;padding-bottom:1rem;border-bottom:1px dashed rgba(26,22,18,.3);flex-wrap:wrap}
+.keyread{font-weight:700;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase}
+.keyread b{color:var(--clay);font-size:1.15rem;margin-left:.3rem}
+.tr{display:flex;gap:.4rem}
+.tr button{width:44px;height:38px;border-radius:10px;border:2px solid var(--ink);background:var(--paper);font:700 .9rem var(--body);cursor:pointer;transition:transform .4s var(--ease),background .3s var(--ease),color .3s}
+.tr button:hover{transform:translateY(-3px) rotate(-2deg);background:var(--ink);color:var(--paper)}
+.tr button:active{transform:scale(.92)}
+.tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;background:var(--butter);padding:.1rem .55rem;border-radius:4px;margin-bottom:.7rem}
+.dl{margin-bottom:.8rem;line-height:1}
+.sg{display:inline-block;vertical-align:bottom}
+.sg b{display:block;font-weight:700;color:var(--clay);font-size:.95rem;min-height:1.5em;padding-right:.8em;font-variant-numeric:tabular-nums}
+.sg span{display:block;white-space:pre;font-family:var(--display);font-size:1.25rem;line-height:1.3}
+
+/* marquee */
+.marq{background:var(--ink);color:var(--paper);overflow:hidden;padding:1.1rem 0;transform:rotate(-1.2deg);margin:-1.5rem -2vw 0;position:relative;z-index:3}
+.marq div{display:flex;gap:2.5rem;width:max-content;font:italic 500 1.6rem var(--display);white-space:nowrap}
+.marq span::after{content:"♪";color:var(--butter);margin-left:2.5rem;font-style:normal}
+
+/* features */
+.feat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.4rem;margin-top:3rem}
+.fc{background:#fff;border:2px solid var(--ink);border-radius:18px;padding:2rem;transition:transform .6s var(--ease),box-shadow .6s var(--ease)}
+.fc:hover{transform:translate(-4px,-4px);box-shadow:8px 8px 0 var(--clay)}
+.fc .n{font:italic 600 2.6rem var(--display);color:var(--clay);line-height:1}
+.fc h3{font-size:1.6rem;margin:.9rem 0 .6rem}
+.fc p{color:#5b5348}
+
+/* quote parallax band */
+.band{background:var(--moss);color:var(--paper);overflow:hidden;padding:clamp(6rem,14vw,11rem) 0;text-align:center}
+.band .bg{position:absolute;left:0;right:0;font:italic 700 clamp(7rem,24vw,20rem) var(--display);white-space:nowrap;color:rgba(247,242,232,.06);line-height:1;pointer-events:none;will-change:transform}
+.band .b1{top:6%}.band .b2{bottom:4%}
+.band blockquote{position:relative;z-index:2;font:500 clamp(2rem,5vw,4rem) var(--display);line-height:1.1;letter-spacing:-.02em;max-width:17em;margin:0 auto}
+.band blockquote em{color:var(--butter)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:3rem;border-top:2px solid var(--ink)}
+.st{padding:2rem 1rem 0 0}
+.st .v{font:600 clamp(3rem,6vw,5rem) var(--display);letter-spacing:-.03em;line-height:1}
+.st .v i{color:var(--clay);font-style:italic}
+.st p{margin-top:.6rem;color:#5b5348;font-size:.95rem}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;margin-top:3rem;counter-reset:s}
+.sp{border-top:2px solid var(--ink);padding-top:1.4rem;counter-increment:s}
+.sp::before{content:"0" counter(s);font:italic 600 1rem var(--display);color:var(--clay)}
+.sp h3{font-size:1.7rem;margin:.5rem 0}
+.sp p{color:#5b5348}
+
+/* cta */
+.cta{background:var(--clay);color:#fff;text-align:center;overflow:hidden}
+.cta h2{font-size:clamp(2.6rem,7vw,5.5rem);max-width:12em;margin:1rem auto 1.2rem}
+.cta h2 em{color:var(--ink)}
+.cta .lead{color:rgba(255,255,255,.85);margin:0 auto 2rem}
+.cta .eyebrow{color:var(--paper)}
+.cta .orb{background:var(--butter);opacity:.4}
+.cta .c1{width:300px;height:300px;left:-80px;top:-60px}
+.cta .c2{width:200px;height:200px;right:-50px;bottom:-40px;background:var(--ink);opacity:.25}
+.cta .wrap{position:relative;z-index:2}
+.cta .btn.solid{background:var(--ink);border-color:var(--ink)}
+.cta .btn.solid::before{background:var(--paper)}
+.cta .btn.solid:hover{color:var(--ink);border-color:var(--paper)}
+
+footer{background:var(--ink);color:rgba(247,242,232,.7);padding:2.5rem 0;font-size:.9rem}
+footer .wrap{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+footer b{font-family:var(--display);color:var(--paper);font-size:1.2rem}
+
+/* responsive */
+@media(max-width:900px){
+  .links{display:none}.burger{display:block}
+  .hero .grid{grid-template-columns:1fr}
+  .hero{padding-top:7rem}
+  .feat-grid,.steps{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .card{box-shadow:6px 6px 0 var(--ink)}
+}
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div id="pre" aria-hidden="true"><div class="pre-in">
+  <div class="pre-word" id="preWord"><span class="q"></span><span class="a"></span></div>
+  <div class="pre-bar"><i id="preBar"></i></div>
+  <div class="pre-n" id="preN">000</div>
+</div></div>
+
+<nav class="nav" id="nav">
+  <div class="wrap">
+    <a href="#top" class="logo" data-go>Quick<b>Chords</b></a>
+    <div class="links">
+      <a class="l" href="#features" data-go>Features</a>
+      <a class="l" href="#how" data-go>How it works</a>
+      <a class="l" href="#numbers" data-go>By the numbers</a>
+      <a class="btn solid" href="app.html">Open the app <span class="arr">→</span></a>
+    </div>
+    <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile"><i></i><i></i></button>
+  </div>
+</nav>
+
+<div class="mobile" id="mobile" role="dialog" aria-label="Menu">
+  <a class="m" href="#features" data-go><span>Features</span></a>
+  <a class="m" href="#how" data-go><span>How it works</span></a>
+  <a class="m" href="#numbers" data-go><span>By the numbers</span></a>
+  <a class="btn light" href="app.html">Open the app <span class="arr">→</span></a>
+  <small>Made for songwriters, by a songwriter-at-heart.</small>
+</div>
+
+<header class="hero" id="top">
+  <div class="orb o1" data-p="-30"></div>
+  <div class="orb o2" data-p="-55"></div>
+  <div class="orb o3" data-p="-80"></div>
+  <div class="wrap grid">
+    <div>
+      <span class="eyebrow h-in">A songwriter’s notepad</span>
+      <h1>
+        <span class="ln"><span>Lyrics in.</span></span>
+        <span class="ln"><span><em>Chords</em> over.</span></span>
+        <span class="ln"><span>Any key.</span></span>
+      </h1>
+      <p class="lead h-in">Paste a verse or chorus and QuickChords lays clean chords above every line, then transposes the whole song with one tap. No clutter, no tab-site noise.</p>
+      <div class="cta-row h-in">
+        <a class="btn solid" href="app.html">Try it now <span class="arr">→</span></a>
+        <a class="btn" href="#how" data-go>See how it works</a>
+      </div>
+    </div>
+    <div class="card h-card" id="demo" aria-label="Live transpose demo">
+      <div class="card-top">
+        <div class="keyread">Key<b id="dKey">G</b></div>
+        <div class="tr"><button id="dDn" aria-label="Down one semitone">−1</button><button id="dUp" aria-label="Up one semitone">+1</button></div>
+      </div>
+      <div class="tag">Chorus</div>
+      <div id="dLines"></div>
+    </div>
+  </div>
+</header>
+
+<div class="marq" aria-hidden="true"><div id="marq"></div></div>
+
+<section id="features">
+  <div class="wrap">
+    <span class="eyebrow rv">Built for the writing room</span>
+    <h2 class="rv">Everything a chorus needs.<br><em>Nothing it doesn’t.</em></h2>
+    <p class="lead rv">A single-purpose workspace. Type on the left, read the finished sheet on the right.</p>
+    <div class="feat-grid" data-stagger>
+      <article class="fc"><div class="n">i.</div><h3>Chords above, never beside</h3><p>Every chord is anchored to its lyric, so a long Fmaj7 can’t crash into the next one, even after you transpose.</p></article>
+      <article class="fc"><div class="n">ii.</div><h3>Real chromatic transposition</h3><p>Sharps and flats chosen to fit the key. Qualities survive the move: maj7, m7, sus2, sus4, add9, dim, and slash chords like G/B.</p></article>
+      <article class="fc"><div class="n">iii.</div><h3>A capo helper that thinks ahead</h3><p>Pick capo 1–7 and see the open shapes you’ll play next to the key that actually sounds.</p></article>
+      <article class="fc"><div class="n">iv.</div><h3>Moods, then fine-tuning</h3><p>Warm, late-night, uplifting or melancholic. Then click any chord to cycle it, and copy a clean plain-text sheet.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="band">
+  <div class="bg b1" data-x="-18">chords over words</div>
+  <div class="bg b2" data-x="18">words over chords</div>
+  <div class="wrap"><blockquote class="rv">Chords belong <em>above</em> the words, not in the way of them.</blockquote></div>
+</section>
+
+<section id="numbers">
+  <div class="wrap">
+    <span class="eyebrow rv">By the numbers</span>
+    <h2 class="rv">Small tool. <em>Sharp</em> edges.</h2>
+    <div class="stats" data-stagger>
+      <div class="st"><div class="v"><span data-count="15">0</span></div><p>Keys in the picker, sharps and flats</p></div>
+      <div class="st"><div class="v"><span data-count="7">0</span></div><p>Capo positions with open shapes</p></div>
+      <div class="st"><div class="v"><span data-count="4">0</span></div><p>Mood presets to start from</p></div>
+      <div class="st"><div class="v"><span data-count="0">0</span><i>*</i></div><p>*Sign-ups required. Just open and play</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="how" style="padding-top:0">
+  <div class="wrap">
+    <span class="eyebrow rv">How it works</span>
+    <h2 class="rv">Three moves to a <em>playable</em> sheet.</h2>
+    <div class="steps" data-stagger>
+      <div class="sp"><h3>Paste your lyrics</h3><p>Plain lines or labelled sections like [Verse 1] and [Chorus]. Or load a sample to see it work in a second.</p></div>
+      <div class="sp"><h3>Choose a mood</h3><p>Pick a progression vibe and a starting key. Chords spread across your lines automatically.</p></div>
+      <div class="sp"><h3>Transpose &amp; copy</h3><p>Nudge ±1 semitone to fit your voice, set a capo, then copy a tidy chord sheet in one click.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="orb c1" data-p="-40"></div><div class="orb c2" data-p="-70"></div>
+  <div class="wrap">
+    <span class="eyebrow rv">Ready when you are</span>
+    <h2 class="rv">Your next song deserves a <em>clean</em> page.</h2>
+    <p class="lead rv">Open the notepad, paste a chorus, and hear it in your key.</p>
+    <a class="btn solid rv" href="app.html">Open QuickChords <span class="arr">→</span></a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap"><b>QuickChords</b><span>A weekend build for songwriters. © 2026</span></div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const canAnimate=!!(window.gsap&&window.ScrollTrigger)&&!reduce;
+
+/* ---------- demo transposer (works without animation libs) ---------- */
+const NS=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'],NF=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const KEYS=['C','Db','D','Eb','E','F','F#','G','Ab','A','Bb','B'],FLAT=['F','Bb','Eb','Ab','Db','Gb'];
+const idx=n=>{let i=NS.indexOf(n);return i<0?NF.indexOf(n):i};
+const sp=(i,f)=>(f?NF:NS)[((i%12)+12)%12];
+const tr=(c,n,f)=>{const m=c.match(/^([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?$/);return m?sp(idx(m[1])+n,f)+m[2]+(m[3]?'/'+sp(idx(m[3])+n,f):''):c};
+const SONG=[
+ [['G','Leave the '],['D','porch light '],['Em','on for '],['C','me']],
+ [['G','I’m walking '],['D/F#','home through the '],['Em7','golden '],['Cmaj7','dark']]
+];
+let off=0;
+function drawDemo(animate){
+  const key=KEYS[((7+off)%12+12)%12],fl=FLAT.includes(key);
+  $('#dKey').textContent=key;
+  $('#dLines').innerHTML=SONG.map(l=>'<div class="dl">'+l.map(([c,t])=>'<span class="sg"><b>'+tr(c,off,fl)+'</b><span>'+t+'</span></span>').join('')+'</div>').join('');
+  if(animate&&canAnimate)gsap.fromTo('#dLines b',{y:-8,opacity:0},{y:0,opacity:1,duration:.5,stagger:.03,ease:'power3.out'});
+}
+$('#dUp').onclick=()=>{off++;drawDemo(1)};
+$('#dDn').onclick=()=>{off--;drawDemo(1)};
+drawDemo();
+
+/* marquee text */
+const words=['Paste lyrics','Pick a mood','Transpose in a tap','Capo-ready','Copy clean','Songs first'];
+$('#marq').innerHTML=[...words,...words,...words,...words].map(w=>'<span>'+w+'</span>').join('');
+
+/* ---------- preloader chars ---------- */
+const chars=(el,t)=>{el.innerHTML=[...t].map(c=>'<span class="ch">'+c+'</span>').join('')};
+chars($('#preWord .q'),'Quick');chars($('#preWord .a'),'Chords');
+
+function finish(){
+  const p=$('#pre');if(p)p.style.display='none';
+  document.documentElement.classList.remove('lenis-stopped');
+}
+if(!canAnimate){finish();$$('[data-count]').forEach(e=>e.textContent=e.dataset.count);
+  $('#nav').classList.add('scrolled');
+  /* still make menu functional */
+}
+
+/* ---------- menu (functional with or without GSAP) ---------- */
+const burger=$('#burger'),mobile=$('#mobile');
+let open=false,lenis=null,menuTl=null;
+function setMenu(v){
+  open=v;document.body.classList.toggle('menu-open',v);
+  burger.setAttribute('aria-expanded',v);burger.setAttribute('aria-label',v?'Close menu':'Open menu');
+  if(lenis){v?lenis.stop():lenis.start()}
+  if(!canAnimate){mobile.style.visibility=v?'visible':'hidden';mobile.style.clipPath=v?'none':'circle(0 at 100% 0)';return}
+  if(v){
+    mobile.style.visibility='visible';
+    menuTl&&menuTl.kill();
+    menuTl=gsap.timeline()
+     .to(mobile,{clipPath:'circle(150% at calc(100% - 3rem) 2.6rem)',duration:.9,ease:'power4.inOut'})
+     .fromTo('#mobile .m span',{yPercent:110},{yPercent:0,duration:.8,stagger:.08,ease:'power4.out'},'-=.45')
+     .fromTo('#mobile .btn, #mobile small',{y:20,opacity:0},{y:0,opacity:1,duration:.6,stagger:.08,ease:'power3.out'},'-=.5');
+  }else{
+    menuTl&&menuTl.kill();
+    menuTl=gsap.to(mobile,{clipPath:'circle(0 at calc(100% - 3rem) 2.6rem)',duration:.7,ease:'power4.inOut',onComplete:()=>{mobile.style.visibility='hidden'}});
+  }
+}
+burger.onclick=()=>setMenu(!open);
+addEventListener('keydown',e=>{if(e.key==='Escape'&&open)setMenu(false)});
+
+/* anchor links */
+$$('[data-go]').forEach(a=>a.addEventListener('click',e=>{
+  const h=a.getAttribute('href');if(!h||h[0]!=='#')return;
+  e.preventDefault();
+  const wasOpen=open;if(open)setMenu(false);
+  const t=h==='#top'?0:$(h);
+  setTimeout(()=>{ if(lenis)lenis.scrollTo(t,{offset:-60,duration:1.4}); else (t===0?scrollTo({top:0,behavior:'smooth'}):t.scrollIntoView({behavior:'smooth'})) },wasOpen?350:0);
+}));
+
+if(!canAnimate)return;
+
+/* ---------- Lenis + GSAP wiring ---------- */
+gsap.registerPlugin(ScrollTrigger);
+if(window.Lenis){
+  lenis=new Lenis({duration:1.15,easing:t=>Math.min(1,1.001-Math.pow(2,-10*t)),smoothWheel:true});
+  lenis.on('scroll',ScrollTrigger.update);
+  gsap.ticker.add(t=>lenis.raf(t*1000));
+  gsap.ticker.lagSmoothing(0);
+  lenis.stop();
+}
+
+/* initial hidden states */
+gsap.set('.h-in',{y:40,opacity:0});
+gsap.set('.hero h1 .ln>span',{yPercent:115});
+gsap.set('.h-card',{y:70,opacity:0,rotate:2});
+gsap.set('.nav',{yPercent:-100});
+
+/* ---------- preloader timeline ---------- */
+const counter={v:0};
+const pre=gsap.timeline({onComplete:()=>{$('#pre').style.display='none'}});
+pre.from('#preWord .ch',{yPercent:120,duration:.8,stagger:.045,ease:'power4.out'})
+   .to(counter,{v:100,duration:1.6,ease:'power2.inOut',onUpdate:()=>{$('#preN').textContent=String(Math.round(counter.v)).padStart(3,'0')}},0.2)
+   .to('#preBar',{scaleX:1,duration:1.6,ease:'power2.inOut'},0.2)
+   .to('#preWord .ch',{yPercent:-120,duration:.6,stagger:.03,ease:'power3.in'},'+=.15')
+   .to('.pre-bar,.pre-n',{opacity:0,duration:.3},'<')
+   .to('#pre',{yPercent:-100,duration:1,ease:'power4.inOut'},'-=.1')
+   .add(intro,'-=.55');
+
+function intro(){
+  if(lenis)lenis.start();
+  const t=gsap.timeline({defaults:{ease:'power4.out'}});
+  t.to('.nav',{yPercent:0,duration:.9},0)
+   .to('.hero h1 .ln>span',{yPercent:0,duration:1.2,stagger:.14},0)
+   .to('.h-in',{y:0,opacity:1,duration:.9,stagger:.12},0.35)
+   .to('.h-card',{y:0,opacity:1,rotate:0,duration:1.2},0.5);
+  gsap.to('.h-card',{y:-10,duration:3,ease:'sine.inOut',yoyo:true,repeat:-1,delay:1.8});
+}
+
+/* ---------- sticky nav transition ---------- */
+ScrollTrigger.create({start:60,onUpdate:s=>$('#nav').classList.toggle('scrolled',s.scroll()>60)});
+
+/* ---------- parallax (hero orbs, quote band, CTA orbs) ---------- */
+$$('.orb').forEach(o=>{
+  const sec=o.closest('section,header');
+  gsap.to(o,{y:parseFloat(o.dataset.p)*3,ease:'none',scrollTrigger:{trigger:sec,start:'top bottom',end:'bottom top',scrub:true}});
+});
+$$('.band .bg').forEach(b=>{
+  gsap.fromTo(b,{xPercent:-parseFloat(b.dataset.x)},{xPercent:parseFloat(b.dataset.x),ease:'none',scrollTrigger:{trigger:'#band',start:'top bottom',end:'bottom top',scrub:true}});
+});
+gsap.fromTo('.band blockquote',{yPercent:25},{yPercent:-25,ease:'none',scrollTrigger:{trigger:'#band',start:'top bottom',end:'bottom top',scrub:true}});
+
+/* marquee drift */
+gsap.to('#marq',{xPercent:-25,ease:'none',scrollTrigger:{trigger:'.marq',start:'top bottom',end:'bottom top',scrub:.6}});
+
+/* ---------- scroll reveals on every section ---------- */
+$$('.rv').forEach(el=>{
+  gsap.from(el,{y:55,opacity:0,duration:1.1,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 88%',once:true}});
+});
+$$('[data-stagger]').forEach(g=>{
+  gsap.from(g.children,{y:70,opacity:0,duration:1,stagger:.13,ease:'power3.out',scrollTrigger:{trigger:g,start:'top 85%',once:true}});
+});
+gsap.from('footer .wrap',{y:30,opacity:0,duration:.9,ease:'power3.out',scrollTrigger:{trigger:'footer',start:'top 95%',once:true}});
+
+/* ---------- count-up stats ---------- */
+$$('[data-count]').forEach(el=>{
+  const end=+el.dataset.count,o={v:0};
+  ScrollTrigger.create({trigger:el,start:'top 88%',once:true,onEnter:()=>{
+    gsap.to(o,{v:end,duration:end?1.8:.6,ease:'power2.out',onUpdate:()=>{el.textContent=Math.round(o.v)}});
+  }});
+});
+
+addEventListener('load',()=>ScrollTrigger.refresh());
+})();
+</script>
+</body>
+</html>
